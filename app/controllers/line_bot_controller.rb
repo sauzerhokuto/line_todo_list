@@ -1,10 +1,9 @@
 class LineBotController < ApplicationController
-  binding.pry
   require "line/bot"
 
   protect_from_forgery with: :null_session
-
   def callback
+    binding.pry
     # LINEで送られてきたメッセージのデータを取得
     body = request.body.read
 
@@ -20,9 +19,21 @@ class LineBotController < ApplicationController
     events.each do |event|
       # LINE からテキストが送信された場合
       if (event.type === Line::Bot::Event::MessageType::Text)
-        # LINE からテキストが送信されたときの処理を記述する
+        message= event["message"]["text"]
+        binding.pry
+
+        # 送信されたメッセージをデータベースに保存するコードを書こう
+        message.save!
+
+        reply_message = {
+          type: "text",
+          text: "#{message}が登録されました！" # LINE に返すメッセージを考えてみよう
+        }
+        client.reply_message(event["replyToken"], reply_message)
       end
     end
+
+
 
     # LINE の webhook API との連携をするために status code 200 を返す
     render json: { status: :ok }
